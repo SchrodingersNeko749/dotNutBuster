@@ -4,18 +4,24 @@ using System.Net;
 
 public class DotNutBuster
 {
-    public static bool verbious = false;
     public static string wordlist_path = "sampleWordList.txt";
     public static string domain = "her.st";
+    public static Thread  newThread = new Thread(Bust);
     public static Queue<string> dirs = new Queue<string>();
-    public static int url_count;
-    public static WebClient client = new WebClient();
-    public static Stopwatch stopwatch = new Stopwatch();
     public static List<string> found_directories = new List<string>();
+    public static int url_count;
+    //performance monitoring properties:
+    public static bool verbious = true;
+    public static Stopwatch wps_stopwatch = new Stopwatch();
+    public static Stopwatch main_stopwatch = new Stopwatch();
+    public static Dictionary<string, string> testedUrls = new Dictionary<string, string>();
     public static void Main()
     {
         ReadWordlist();
-        stopwatch.Start();
+        newThread.Start();
+        wps_stopwatch.Start();
+        main_stopwatch.Start();
+        Thread.Sleep(1000);
         Bust();
         PrintResults();
     }
@@ -29,35 +35,41 @@ public class DotNutBuster
     }
     public static void Bust()
     {
+        WebClient client = new WebClient();
+        string url = "";
         while (dirs.Count > 0)
         {
             try
             {
-                string url = dirs.Dequeue();
-                //Console.WriteLine($"trying {url}");
+                url = dirs.Dequeue();
                 client.DownloadString(url);
                 Console.WriteLine(url);
                 found_directories.Add(url);
+                testedUrls.Add("valid url", url);
             }
             catch (WebException ex)
             {
-                if (verbious == true && ex.Status == WebExceptionStatus.ProtocolError && ex.Response != null)
+                if (ex.Status == WebExceptionStatus.ProtocolError && ex.Response != null)
                 {
-                    var resp = (HttpWebResponse)ex.Response;
-                    if (resp.StatusCode == HttpStatusCode.NotFound)
+                    testedUrls.TryAdd((ex.Message), url);
+                    if(verbious == true)
                     {
-                        Console.WriteLine($": {resp.StatusCode}");
+                        var resp = (HttpWebResponse)ex.Response;
+                        if (resp.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            Console.WriteLine($"{url} : {resp.StatusCode}");
+                        }
                     }
                 }
 
             }
             finally
             {
-                if (stopwatch.Elapsed.TotalSeconds > 10)
+                if (wps_stopwatch.Elapsed.TotalSeconds > 10)
                 {
                     var newCount = dirs.Count;
-                    Console.WriteLine($"WPS { ((url_count - newCount) / stopwatch.Elapsed.TotalSeconds).ToString("0.00") }");
-                    stopwatch.Restart();
+                    Console.WriteLine($"WPS { ((url_count - newCount) / wps_stopwatch.Elapsed.TotalSeconds).ToString("0.00") }");
+                    wps_stopwatch.Restart();
                     url_count = newCount;
                 }
             }
@@ -65,6 +77,7 @@ public class DotNutBuster
     }
     public static void PrintResults()
     {
+        Console.WriteLine($"total time :  {main_stopwatch.Elapsed.Seconds}");
         Console.WriteLine("results:");
         foreach (var found_dir in found_directories)
         {
