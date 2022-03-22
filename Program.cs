@@ -4,9 +4,9 @@ using System.Net;
 
 public class DotNutBuster
 {
-    public static string wordlist_path = "/opt/passlist/directory-list-2.3-small.txt";
-    public static string domain = "her.st";
-    public static Thread[]  bustingThreads = new Thread[100];
+    public static string wordlist_path = "WORD LIST HERE";
+    public static string domain = "DOMAIN NAME HERE";
+    public static Thread[] bustingThreads = new Thread[100];
     public static object SyncRoot = new object();
     public static Queue<string> dirs = new Queue<string>();
     public static List<string> found_directories = new List<string>();
@@ -21,8 +21,8 @@ public class DotNutBuster
         ReadWordlist();
         for (int i = 0; i < 100; i++)
         {
-            bustingThreads[i] = new Thread (()=>Bust());
-            bustingThreads[i].Start();   
+            bustingThreads[i] = new Thread(() => Bust());
+            bustingThreads[i].Start();
         }
         wps_stopwatch.Start();
         //main_stopwatch.Start();
@@ -42,7 +42,7 @@ public class DotNutBuster
         WebClient client = new WebClient();
         string url = "";
         int count;
-        lock(SyncRoot)
+        lock (SyncRoot)
         {
             count = dirs.Count;
         }
@@ -50,11 +50,11 @@ public class DotNutBuster
         {
             try
             {
-                lock(SyncRoot)
-	                url = dirs.Dequeue();
+                lock (SyncRoot)
+                    url = dirs.Dequeue();
                 client.DownloadString(url);
                 Console.WriteLine(url);
-                lock(SyncRoot)
+                lock (SyncRoot)
                     found_directories.Add(url);
             }
             catch (WebException ex)
@@ -75,7 +75,7 @@ public class DotNutBuster
             }
             finally
             {
-                lock(SyncRoot)
+                lock (SyncRoot)
                 {
                     count = dirs.Count;
                     testedUrls.Add(url, "valid url");
