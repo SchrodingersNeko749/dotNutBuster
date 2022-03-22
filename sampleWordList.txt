@@ -14,7 +14,6 @@ time
 sydney
 simon
 voodoo
-magnum
 juice
 abgrtyu
 777777
@@ -37,7 +36,6 @@ magnum
 enterprise
 thomas1
 30media
-broncos
 wallace
 pingpong
 darwin
